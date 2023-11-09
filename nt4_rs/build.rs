@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf, process::Command, str, path::Path};
+use std::{fs, path::Path, path::PathBuf, process::Command, str};
 
 use anyhow::Context;
 use cargo_metadata::MetadataCommand;
@@ -27,23 +27,23 @@ fn get_target() -> anyhow::Result<String> {
 }
 
 fn copy_directory_contents(src: &Path, dest: &Path) {
-  // Ensure the destination directory exists.
-  let _ = fs::create_dir_all(dest);
+    // Ensure the destination directory exists.
+    let _ = fs::create_dir_all(dest);
 
-  for entry in fs::read_dir(src).unwrap() {
-      let entry = entry.unwrap();
+    for entry in fs::read_dir(src).unwrap() {
+        let entry = entry.unwrap();
 
-      let entry_path = entry.path();
-      let dest_path = dest.join(entry_path.file_name().unwrap());
+        let entry_path = entry.path();
+        let dest_path = dest.join(entry_path.file_name().unwrap());
 
-      if entry_path.is_file() {
-          // If the entry is a file, copy it to the destination.
-          let _ = fs::copy(&entry_path, &dest_path);
-      } else if entry_path.is_dir() {
-          // If the entry is a directory, recursively copy its contents.
-          copy_directory_contents(&entry_path, &dest_path);
-      }
-  }
+        if entry_path.is_file() {
+            // If the entry is a file, copy it to the destination.
+            let _ = fs::copy(&entry_path, &dest_path);
+        } else if entry_path.is_dir() {
+            // If the entry is a directory, recursively copy its contents.
+            copy_directory_contents(&entry_path, &dest_path);
+        }
+    }
 }
 
 fn copy_deps() {
@@ -75,18 +75,22 @@ fn copy_deps() {
                             .unwrap()
                             .join("deps");
 
-                            for entry in fs::read_dir(path).unwrap() {
-                              let entry = entry.unwrap();
-                              let entry_path = entry.path();
-                              if entry_path.is_file() {
-                                  println!("{:?} {:?}", entry_path, deps_dir);
-                                  fs::copy(&entry_path, &deps_dir.join(entry_path.file_name().unwrap())).unwrap();
-                              } else if entry_path.is_dir() {
-                                  let dest_dir = deps_dir.join(entry_path.file_name().unwrap());
-                                  fs::create_dir_all(&dest_dir).unwrap();
-                                  copy_directory_contents(&entry_path, &dest_dir);
-                              }
-                          }
+                        for entry in fs::read_dir(path).unwrap() {
+                            let entry = entry.unwrap();
+                            let entry_path = entry.path();
+                            if entry_path.is_file() {
+                                println!("{:?} {:?}", entry_path, deps_dir);
+                                fs::copy(
+                                    &entry_path,
+                                    &deps_dir.join(entry_path.file_name().unwrap()),
+                                )
+                                .unwrap();
+                            } else if entry_path.is_dir() {
+                                let dest_dir = deps_dir.join(entry_path.file_name().unwrap());
+                                fs::create_dir_all(&dest_dir).unwrap();
+                                copy_directory_contents(&entry_path, &dest_dir);
+                            }
+                        }
                     }
                 }
             }
